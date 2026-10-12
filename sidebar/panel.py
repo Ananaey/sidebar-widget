@@ -4,6 +4,8 @@ from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
+from sidebar.shelf import Shelf
+
 PANEL_WIDTH = 320
 PANEL_HEIGHT = 520
 PANEL_TOP = 60
@@ -62,11 +64,12 @@ class Panel(QWidget):
         inner.setContentsMargins(20, 20, 20, 20)
         title = QLabel("Quick Shelf")
         title.setStyleSheet("font-size: 18px; font-weight: 600;")
-        hint = QLabel("Your files and folders will live here.")
+        hint = QLabel("Drag files or folders here")
         hint.setStyleSheet("color: #9a9aa2;")
+        self.shelf = Shelf()
         inner.addWidget(title)
         inner.addWidget(hint)
-        inner.addStretch()
+        inner.addWidget(self.shelf, 1)
 
         self._anim = QPropertyAnimation(self, b"geometry", self)
         self._anim.setDuration(ANIMATION_MS)
