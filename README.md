@@ -15,7 +15,7 @@ Click the thin tab on the right edge of the screen to slide the panel open or cl
 
 - [x] Day 1: frameless always-on-top panel, edge handle, slide animation
 - [x] Day 2: drag files and folders onto the panel to add them
-- [ ] Day 3: double-click to open, right-click to remove
+- [x] Day 3: double-click to open, right-click to remove (Delete key works too)
 - [ ] Day 4: save items between runs
 - [ ] Day 5: macOS-style look, light and dark themes
 - [ ] Day 6: search, groups, reordering
