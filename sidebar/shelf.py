@@ -1,5 +1,6 @@
 """The list that holds shelf items and accepts files dropped from Explorer."""
 
+import os
 from typing import List
 
 from PySide6.QtCore import QFileInfo, Qt
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import (
     QMenu,
 )
 
+from sidebar import storage
 from sidebar.items import ShelfItem, make_items
 from sidebar.opener import open_path
 
@@ -24,8 +26,9 @@ _STYLE = (
 
 
 class Shelf(QListWidget):
-    def __init__(self):
+    def __init__(self, storage_path: str = ""):
         super().__init__()
+        self._storage_path = storage_path or storage.default_path()
         self._items: List[ShelfItem] = []
         self._icons = QFileIconProvider()
         self.setAcceptDrops(True)
@@ -34,6 +37,13 @@ class Shelf(QListWidget):
         self.setStyleSheet(_STYLE)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.itemDoubleClicked.connect(self._open_item)
+        self._add_items(make_items(storage.load(self._storage_path), must_exist=False))
+
+    def _save(self) -> None:
+        try:
+            storage.save(self._storage_path, [item.path for item in self._items])
+        except OSError:
+            pass  # a failed save must never crash the widget
 
     def _open_item(self, row: QListWidgetItem) -> None:
         path = row.data(Qt.ItemDataRole.UserRole)
@@ -46,6 +56,7 @@ class Shelf(QListWidget):
         if 0 <= index < len(self._items):
             del self._items[index]
             self.takeItem(index)
+            self._save()
 
     def contextMenuEvent(self, event):
         row = self.itemAt(event.pos())
@@ -67,15 +78,23 @@ class Shelf(QListWidget):
         else:
             super().keyPressEvent(event)
 
-    def add_paths(self, paths) -> int:
-        """Add paths to the shelf and return how many were new."""
-        new_items = make_items(paths, self._items)
+    def _add_items(self, new_items: List[ShelfItem]) -> None:
         for item in new_items:
             self._items.append(item)
             row = QListWidgetItem(self._icons.icon(QFileInfo(item.path)), item.name)
             row.setToolTip(item.path)
             row.setData(Qt.ItemDataRole.UserRole, item.path)
+            if not os.path.exists(item.path):
+                row.setForeground(QColor("#6e6e73"))
+                row.setToolTip(f"{item.path}\n(not found)")
             self.addItem(row)
+
+    def add_paths(self, paths) -> int:
+        """Add paths to the shelf, save, and return how many were new."""
+        new_items = make_items(paths, self._items)
+        self._add_items(new_items)
+        if new_items:
+            self._save()
         return len(new_items)
 
     def dragEnterEvent(self, event):

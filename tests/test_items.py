@@ -24,6 +24,11 @@ class MakeItemsTests(unittest.TestCase):
         missing = os.path.join(self.tmp.name, "nope.txt")
         self.assertEqual(make_items([missing, ""]), [])
 
+    def test_keeps_missing_paths_when_not_required(self):
+        missing = os.path.join(self.tmp.name, "gone.txt")
+        items = make_items([missing], must_exist=False)
+        self.assertEqual([i.name for i in items], ["gone.txt"])
+
     def test_skips_duplicates_in_one_drop(self):
         self.assertEqual(len(make_items([self.file, self.file])), 1)
 

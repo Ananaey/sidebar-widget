@@ -18,11 +18,17 @@ class ShelfItem:
         return os.path.isdir(self.path)
 
 
-def make_items(paths: Iterable[str], existing: Iterable[ShelfItem] = ()) -> List[ShelfItem]:
+def make_items(
+    paths: Iterable[str],
+    existing: Iterable[ShelfItem] = (),
+    must_exist: bool = True,
+) -> List[ShelfItem]:
     """Turn dropped paths into new items.
 
-    Skips paths that do not exist, duplicates within the drop, and paths
-    already on the shelf (compared case-insensitively, normalised).
+    Skips duplicates within the drop and paths already on the shelf
+    (compared case-insensitively, normalised). Paths that do not exist are
+    skipped unless must_exist is False, which is used when reloading a saved
+    shelf so moved files stay visible instead of silently vanishing.
     """
     seen = {os.path.normcase(os.path.normpath(item.path)) for item in existing}
     new: List[ShelfItem] = []
@@ -31,7 +37,7 @@ def make_items(paths: Iterable[str], existing: Iterable[ShelfItem] = ()) -> List
             continue
         path = os.path.normpath(raw)
         key = os.path.normcase(path)
-        if key in seen or not os.path.exists(path):
+        if key in seen or (must_exist and not os.path.exists(path)):
             continue
         seen.add(key)
         new.append(ShelfItem(path))
