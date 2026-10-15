@@ -16,13 +16,15 @@ from PySide6.QtWidgets import (
 from sidebar import storage
 from sidebar.items import ShelfItem, make_items
 from sidebar.opener import open_path
+from sidebar.theme import DARK, Theme
 
-_STYLE = (
-    "QListWidget { background: transparent; border: none; color: #f2f2f7; font-size: 14px; }"
-    "QListWidget::item { padding: 8px; border-radius: 8px; }"
-    "QListWidget::item:hover { background: rgba(255,255,255,25); }"
-    "QListWidget::item:selected { background: rgba(10,132,255,140); }"
-)
+def _style_for(theme: Theme) -> str:
+    return (
+        f"QListWidget {{ background: transparent; border: none; color: {theme.text}; font-size: 14px; }}"
+        "QListWidget::item { padding: 8px; border-radius: 8px; }"
+        f"QListWidget::item:hover {{ background: {theme.hover}; }}"
+        f"QListWidget::item:selected {{ background: {theme.selected}; color: {theme.text}; }}"
+    )
 
 
 class Shelf(QListWidget):
@@ -34,10 +36,13 @@ class Shelf(QListWidget):
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
         self.setFrameShape(QListWidget.Shape.NoFrame)
-        self.setStyleSheet(_STYLE)
+        self.apply_theme(DARK)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.itemDoubleClicked.connect(self._open_item)
         self._add_items(make_items(storage.load(self._storage_path), must_exist=False))
+
+    def apply_theme(self, theme: Theme) -> None:
+        self.setStyleSheet(_style_for(theme))
 
     def _save(self) -> None:
         try:

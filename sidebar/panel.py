@@ -2,9 +2,11 @@
 
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, Qt
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from sidebar.shelf import Shelf
+from sidebar.theme import DARK, Theme, get_theme, toggled
+
 
 PANEL_WIDTH = 320
 PANEL_HEIGHT = 520
@@ -28,12 +30,15 @@ class Handle(QPushButton):
         self.setWindowFlags(_FLAGS)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFixedSize(HANDLE_WIDTH, HANDLE_HEIGHT)
-        self.setStyleSheet(
-            "QPushButton { background: rgba(40,40,45,200); border: none;"
-            " border-top-left-radius: 7px; border-bottom-left-radius: 7px; }"
-            "QPushButton:hover { background: rgba(80,80,90,230); }"
-        )
+        self.apply_theme(DARK)
         self.clicked.connect(on_click)
+
+    def apply_theme(self, theme: Theme) -> None:
+        self.setStyleSheet(
+            f"QPushButton {{ background: {theme.handle}; border: none;"
+            " border-top-left-radius: 7px; border-bottom-left-radius: 7px; }"
+            f"QPushButton:hover {{ background: {theme.handle_hover}; }}"
+        )
 
     def place(self, screen_rect: QRect) -> None:
         self.move(screen_rect.right() - HANDLE_WIDTH + 1, screen_rect.top() + PANEL_TOP)
@@ -51,24 +56,27 @@ class Panel(QWidget):
 
         self._body = QWidget(self)
         self._body.setObjectName("body")
-        self._body.setStyleSheet(
-            "#body { background: rgba(30,30,34,235); border-top-left-radius: 16px;"
-            " border-bottom-left-radius: 16px; }"
-            "QLabel { color: #f2f2f7; }"
-        )
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self._body)
 
         inner = QVBoxLayout(self._body)
         inner.setContentsMargins(20, 20, 20, 20)
-        title = QLabel("Quick Shelf")
-        title.setStyleSheet("font-size: 18px; font-weight: 600;")
-        hint = QLabel("Drag files or folders here")
-        hint.setStyleSheet("color: #9a9aa2;")
+        header = QHBoxLayout()
+        self._title = QLabel("Quick Shelf")
+        self._title.setStyleSheet("font-size: 18px; font-weight: 600;")
+        self._theme_button = QPushButton("◐")
+        self._theme_button.setFixedSize(28, 28)
+        self._theme_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._theme_button.setToolTip("Switch light / dark")
+        self._theme_button.clicked.connect(lambda: self.apply_theme(toggled(self._theme)))
+        header.addWidget(self._title)
+        header.addStretch()
+        header.addWidget(self._theme_button)
+        self._hint = QLabel("Drag files or folders here")
         self.shelf = Shelf()
-        inner.addWidget(title)
-        inner.addWidget(hint)
+        inner.addLayout(header)
+        inner.addWidget(self._hint)
         inner.addWidget(self.shelf, 1)
 
         self._anim = QPropertyAnimation(self, b"geometry", self)
@@ -77,6 +85,24 @@ class Panel(QWidget):
         self._anim.finished.connect(self._on_anim_finished)
 
         self.handle = Handle(self.toggle)
+        self._theme = DARK
+        self.apply_theme(get_theme("auto"))
+
+    def apply_theme(self, theme: Theme) -> None:
+        self._theme = theme
+        self._body.setStyleSheet(
+            f"#body {{ background: {theme.panel_bg}; border-top-left-radius: 16px;"
+            " border-bottom-left-radius: 16px; }"
+            f"QLabel {{ color: {theme.text}; }}"
+        )
+        self._hint.setStyleSheet(f"color: {theme.muted};")
+        self._theme_button.setStyleSheet(
+            f"QPushButton {{ background: transparent; border: none; color: {theme.muted};"
+            " font-size: 16px; border-radius: 14px; }"
+            f"QPushButton:hover {{ background: {theme.hover}; color: {theme.text}; }}"
+        )
+        self.shelf.apply_theme(theme)
+        self.handle.apply_theme(theme)
 
     def _screen_rect(self) -> QRect:
         return QGuiApplication.primaryScreen().availableGeometry()

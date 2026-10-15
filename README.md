@@ -17,6 +17,7 @@ Click the thin tab on the right edge of the screen to slide the panel open or cl
 - [x] Day 2: drag files and folders onto the panel to add them
 - [x] Day 3: double-click to open, right-click to remove (Delete key works too)
 - [x] Day 4: save items between runs (stored in `%APPDATA%\QuickShelf\shelf.json`)
-- [ ] Day 5: macOS-style look, light and dark themes
+- [x] Day 5: light and dark themes (follows the system, toggle button in the header)
+- [ ] Later: real blur / acrylic background and remembering the chosen theme
 - [ ] Day 6: search, groups, reordering
 - [ ] Day 7: tray icon, start on boot, `.exe` release
