@@ -42,3 +42,19 @@ def make_items(
         seen.add(key)
         new.append(ShelfItem(path))
     return new
+
+
+def matches(item: ShelfItem, query: str) -> bool:
+    """True if every word in query appears in the item's name or path (case-insensitive)."""
+    haystack = f"{item.name} {item.path}".lower()
+    return all(word in haystack for word in query.lower().split())
+
+
+def moved(items: List[ShelfItem], index: int, delta: int) -> List[ShelfItem]:
+    """Return a copy of items with the entry at index moved by delta, clamped to the ends."""
+    if not 0 <= index < len(items):
+        return list(items)
+    target = max(0, min(len(items) - 1, index + delta))
+    result = list(items)
+    result.insert(target, result.pop(index))
+    return result

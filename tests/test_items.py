@@ -40,5 +40,47 @@ class MakeItemsTests(unittest.TestCase):
         self.assertEqual(ShelfItem(self.folder + os.sep).name, "docs")
 
 
+class SearchAndMoveTests(unittest.TestCase):
+    def setUp(self):
+        from sidebar.items import ShelfItem as S
+
+        self.a = S(r"C:\Work\Report Final.docx")
+        self.b = S(r"C:\Work\budget.xlsx")
+        self.c = S(r"C:\Photos\trip")
+
+    def test_empty_query_matches_everything(self):
+        from sidebar.items import matches
+
+        self.assertTrue(all(matches(i, "") for i in (self.a, self.b, self.c)))
+
+    def test_matches_name_case_insensitive(self):
+        from sidebar.items import matches
+
+        self.assertTrue(matches(self.a, "report"))
+        self.assertFalse(matches(self.b, "report"))
+
+    def test_matches_path_and_multiple_words(self):
+        from sidebar.items import matches
+
+        self.assertTrue(matches(self.a, "work final"))
+        self.assertFalse(matches(self.c, "work trip"))
+
+    def test_move_down_and_up(self):
+        from sidebar.items import moved
+
+        items = [self.a, self.b, self.c]
+        self.assertEqual(moved(items, 0, 1), [self.b, self.a, self.c])
+        self.assertEqual(moved(items, 2, -1), [self.a, self.c, self.b])
+
+    def test_move_clamps_at_ends_and_ignores_bad_index(self):
+        from sidebar.items import moved
+
+        items = [self.a, self.b, self.c]
+        self.assertEqual(moved(items, 0, -1), items)
+        self.assertEqual(moved(items, 2, 1), items)
+        self.assertEqual(moved(items, 9, 1), items)
+        self.assertEqual(items, [self.a, self.b, self.c])
+
+
 if __name__ == "__main__":
     unittest.main()
