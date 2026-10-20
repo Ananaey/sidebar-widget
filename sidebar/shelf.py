@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from sidebar import storage
-from sidebar.items import ShelfItem, make_items
+from sidebar.items import ShelfItem, make_items, matches, moved
 from sidebar.opener import open_path
 from sidebar.theme import DARK, Theme
 
@@ -32,6 +32,7 @@ class Shelf(QListWidget):
         super().__init__()
         self._storage_path = storage_path or storage.default_path()
         self._items: List[ShelfItem] = []
+        self._query = ""
         self._icons = QFileIconProvider()
         self.setAcceptDrops(True)
         self.setDragDropMode(QAbstractItemView.DragDropMode.DropOnly)
@@ -43,6 +44,23 @@ class Shelf(QListWidget):
 
     def apply_theme(self, theme: Theme) -> None:
         self.setStyleSheet(_style_for(theme))
+
+    def set_filter(self, query: str) -> None:
+        """Show only items matching query; an empty query shows everything."""
+        self._query = query
+        for index, item in enumerate(self._items):
+            self.item(index).setHidden(not matches(item, query))
+
+    def move_row(self, index: int, delta: int) -> None:
+        """Move an item up (-1) or down (+1) and keep it selected."""
+        reordered = moved(self._items, index, delta)
+        if reordered == self._items:
+            return
+        self._items = []
+        self.clear()
+        self._add_items(reordered)
+        self._save()
+        self.setCurrentRow(max(0, min(len(reordered) - 1, index + delta)))
 
     def _save(self) -> None:
         try:
@@ -70,10 +88,19 @@ class Shelf(QListWidget):
         index = self.row(row)
         menu = QMenu(self)
         open_action = menu.addAction("Open")
+        up_action = menu.addAction("Move up")
+        down_action = menu.addAction("Move down")
+        # Reordering while a search hides rows would be confusing.
+        up_action.setEnabled(not self._query and index > 0)
+        down_action.setEnabled(not self._query and index < len(self._items) - 1)
         remove_action = menu.addAction("Remove from shelf")
         chosen = menu.exec(event.globalPos())
         if chosen == open_action:
             self._open_item(row)
+        elif chosen == up_action:
+            self.move_row(index, -1)
+        elif chosen == down_action:
+            self.move_row(index, 1)
         elif chosen == remove_action:
             self.remove_row(index)
 
@@ -92,6 +119,7 @@ class Shelf(QListWidget):
             if not os.path.exists(item.path):
                 row.setForeground(QColor("#6e6e73"))
                 row.setToolTip(f"{item.path}\n(not found)")
+            row.setHidden(not matches(item, self._query))
             self.addItem(row)
 
     def add_paths(self, paths) -> int:

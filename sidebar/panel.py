@@ -2,7 +2,7 @@
 
 from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QRect, Qt
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget
 
 from sidebar.shelf import Shelf
 from sidebar.theme import DARK, Theme, get_theme, toggled
@@ -75,7 +75,12 @@ class Panel(QWidget):
         header.addWidget(self._theme_button)
         self._hint = QLabel("Drag files or folders here")
         self.shelf = Shelf()
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("Search")
+        self._search.setClearButtonEnabled(True)
+        self._search.textChanged.connect(self.shelf.set_filter)
         inner.addLayout(header)
+        inner.addWidget(self._search)
         inner.addWidget(self._hint)
         inner.addWidget(self.shelf, 1)
 
@@ -96,6 +101,10 @@ class Panel(QWidget):
             f"QLabel {{ color: {theme.text}; }}"
         )
         self._hint.setStyleSheet(f"color: {theme.muted};")
+        self._search.setStyleSheet(
+            f"QLineEdit {{ background: {theme.hover}; color: {theme.text}; border: none;"
+            " border-radius: 8px; padding: 6px 10px; font-size: 14px; }"
+        )
         self._theme_button.setStyleSheet(
             f"QPushButton {{ background: transparent; border: none; color: {theme.muted};"
             " font-size: 16px; border-radius: 14px; }"
