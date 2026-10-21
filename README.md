@@ -1,4 +1,5 @@
 # Quick Shelf
+n[![tests](https://github.com/Ananaey/sidebar-widget/actions/workflows/tests.yml/badge.svg)](https://github.com/Ananaey/sidebar-widget/actions/workflows/tests.yml)
 
 A slide-out sidebar for your desktop. Keep files and folders in one place, and open them with a double-click.
 
