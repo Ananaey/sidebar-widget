@@ -47,7 +47,7 @@ class Handle(QPushButton):
 class Panel(QWidget):
     """Frameless always-on-top panel that slides in from the right edge."""
 
-    def __init__(self):
+    def __init__(self, storage_path: str = ""):
         super().__init__()
         self.setWindowFlags(_FLAGS)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -74,7 +74,7 @@ class Panel(QWidget):
         header.addStretch()
         header.addWidget(self._theme_button)
         self._hint = QLabel("Drag files or folders here")
-        self.shelf = Shelf()
+        self.shelf = Shelf(storage_path)
         self._search = QLineEdit()
         self._search.setPlaceholderText("Search")
         self._search.setClearButtonEnabled(True)
