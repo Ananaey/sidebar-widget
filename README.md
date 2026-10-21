@@ -11,6 +11,14 @@ python -m sidebar
 
 Click the thin tab on the right edge of the screen to slide the panel open or closed.
 
+## Build the exe (Windows)
+
+```
+build.bat
+```
+
+This produces `dist\QuickShelf.exe`. Once the widget has been checked on a real machine, attach that file to a GitHub Release so people can download it.
+
 ## Roadmap
 
 - [x] Day 1: frameless always-on-top panel, edge handle, slide animation
@@ -21,4 +29,5 @@ Click the thin tab on the right edge of the screen to slide the panel open or cl
 - [ ] Later: real blur / acrylic background and remembering the chosen theme
 - [x] Day 6: search box and reordering (Move up / Move down in the right-click menu)
 - [ ] Later: groups / pinned sections
-- [ ] Day 7: tray icon, start on boot, `.exe` release
+- [x] Day 7: tray icon (left-click toggles, right-click menu), "Start with Windows", `build.bat` for the exe
+- [ ] Build and publish the first `QuickShelf.exe` as a GitHub Release (needs a machine where the widget runs)
