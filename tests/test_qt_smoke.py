@@ -24,6 +24,24 @@ class QtSmokeTests(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QApplication.instance() or QApplication([])
 
+    @classmethod
+    def tearDownClass(cls):
+        # Let Qt finish deleting widgets before the interpreter shuts down.
+        cls.app.processEvents()
+
+    def make_shelf(self):
+        shelf = Shelf(self.store)
+        self.addCleanup(shelf.deleteLater)
+        return shelf
+
+    def make_panel(self):
+        panel = Panel(self.store)
+        self.addCleanup(panel.deleteLater)
+        self.addCleanup(panel.handle.deleteLater)
+        self.addCleanup(panel.hide)
+        self.addCleanup(panel.handle.hide)
+        return panel
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -41,7 +59,7 @@ class QtSmokeTests(unittest.TestCase):
         return [shelf.item(i).text() for i in range(shelf.count()) if not shelf.item(i).isHidden()]
 
     def test_add_filter_move_remove(self):
-        shelf = Shelf(self.store)
+        shelf = self.make_shelf()
         self.assertEqual(shelf.add_paths(self.files), 3)
         self.assertEqual(shelf.add_paths(self.files), 0)  # duplicates ignored
         self.assertEqual(self.names(shelf), ["alpha.txt", "beta.txt", "gamma.txt"])
@@ -58,23 +76,23 @@ class QtSmokeTests(unittest.TestCase):
         self.assertEqual(self.names(shelf), ["beta.txt", "gamma.txt"])
 
     def test_shelf_persists_between_instances(self):
-        first = Shelf(self.store)
+        first = self.make_shelf()
         first.add_paths(self.files[:2])
         first.move_row(1, -1)
 
-        second = Shelf(self.store)
+        second = self.make_shelf()
         self.assertEqual(self.names(second), ["beta.txt", "alpha.txt"])
 
     def test_missing_saved_file_is_still_listed(self):
-        first = Shelf(self.store)
+        first = self.make_shelf()
         first.add_paths(self.files[:1])
         os.remove(self.files[0])
-        second = Shelf(self.store)
+        second = self.make_shelf()
         self.assertEqual(self.names(second), ["alpha.txt"])
         self.assertIn("not found", second.item(0).toolTip())
 
     def test_panel_toggle_and_theme(self):
-        panel = Panel(self.store)
+        panel = self.make_panel()
         panel.start()
         self.assertFalse(panel._open)
         panel.toggle()
@@ -88,7 +106,7 @@ class QtSmokeTests(unittest.TestCase):
         self.assertIs(panel._theme, DARK)
 
     def test_search_box_filters_the_shelf(self):
-        panel = Panel(self.store)
+        panel = self.make_panel()
         panel.shelf.add_paths(self.files)
         panel._search.setText("gamma")
         self.assertEqual(self.visible(panel.shelf), ["gamma.txt"])
